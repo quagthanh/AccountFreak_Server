@@ -6,6 +6,9 @@ import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { isValidObjectId, Model } from 'mongoose';
 import { hashPassword } from '@/helpers/utils';
 import aqp from 'api-query-params';
+import { v4 as uuidv4 } from 'uuid';
+import * as dayjs from 'dayjs';
+
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<User>) {}
@@ -18,11 +21,11 @@ export class UsersService {
     //hash password
     const { name, email, password, phone, address, image } = createUserDto;
     const isExist = await this.isEmailExist(email);
-    if (isExist) {
+    if (isExist === true) {
       throw new BadRequestException('Email đã tồn tại');
     }
     const hashPasswordForRegister = await hashPassword(password);
-    const user = this.userModel.create({
+    const user = await this.userModel.create({
       name,
       email,
       password: hashPasswordForRegister,
@@ -74,8 +77,27 @@ export class UsersService {
       throw new BadRequestException('Lỗi xảy ra ');
     }
   }
+  async handleRegister(registerDto: CreateAuthDto) {
+    //check email
+    const { name, email, password } = registerDto;
+    const isExist = await this.isEmailExist(email);
+    if (isExist === true) {
+      throw new BadRequestException('Email đã tồn tại');
+    }
+    //hash password
+    const hashPasswordForRegister = await hashPassword(password);
+    const user = await this.userModel.create({
+      name,
+      email,
+      password: hashPasswordForRegister,
+      codeId: uuidv4(),
+      codeExpired: dayjs().add(1, 'minutes'),
+    });
+    return { _id: user._id };
+  }
 }
 import { create } from 'node:domain';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 import { filter } from 'rxjs';
 import { response } from 'express';
+import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
