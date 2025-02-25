@@ -13,6 +13,7 @@ import { JwtAuthGuard } from './passport/jwt-auth.guard';
 import { Public, ResponseMessage } from '@/decorator/customize';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { MailerService } from '@nestjs-modules/mailer';
+import { CodeAuthDto } from './dto/checkcode-auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -31,6 +32,11 @@ export class AuthController {
   @Post('register')
   register(@Body() registerDto: CreateAuthDto) {
     return this.authService.handleRegister(registerDto);
+  }
+  @Public()
+  @Post('check-code')
+  checkCode(@Body() codeDto: CodeAuthDto) {
+    return this.authService.checkCode(codeDto);
   }
   @Public()
   @Get('mail')

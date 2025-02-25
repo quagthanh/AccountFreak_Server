@@ -4,6 +4,7 @@ import { comparePassword } from '@/helpers/utils';
 import { JwtService } from '@nestjs/jwt';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { register } from 'node:module';
+import { CodeAuthDto } from './dto/checkcode-auth.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -36,5 +37,8 @@ export class AuthService {
   }
   handleRegister = async (registerDto: CreateAuthDto) => {
     return await this.usersService.handleRegister(registerDto);
+  };
+  checkCode = async (codeDto: CodeAuthDto) => {
+    return await this.usersService.handleActive(codeDto);
   };
 }

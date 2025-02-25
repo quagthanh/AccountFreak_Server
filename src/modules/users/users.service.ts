@@ -110,9 +110,29 @@ export class UsersService {
     });
     return { _id: user._id };
   }
+  async handleActive(codeDto: CodeAuthDto) {
+    const { _id, code } = codeDto;
+    const data = await this.userModel.findOne({ _id: _id, codeId: code });
+    if (!data) {
+      throw new BadRequestException({
+        message: 'Mã code không hợp lệ hoặc đã hết hạn ',
+      });
+    }
+    //check code's expired
+    const isBeforeCheck = dayjs().isBefore(data.codeExpired);
+    if (isBeforeCheck) {
+      await this.userModel.updateOne({ _id: data._id }, { isActive: true });
+    } else {
+      throw new BadRequestException({
+        message: 'Mã code không hợp lệ hoặc đã hết hạn ',
+      });
+    }
+    return { isBeforeCheck };
+  }
 }
 import { create } from 'node:domain';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 import { filter } from 'rxjs';
 import { response } from 'express';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
+import { CodeAuthDto } from '@/auth/dto/checkcode-auth.dto';
