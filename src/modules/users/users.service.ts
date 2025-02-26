@@ -161,10 +161,74 @@ export class UsersService {
       throw new BadRequestException('Tài khoản không tồn tại/hợp lệ');
     }
   }
+  async retryPassword(retryPasswordDto: RetryPasswordDto) {
+    const { email } = retryPasswordDto;
+    try {
+      const user = await this.userModel.findOne({ email });
+      if (!user) {
+        throw new BadRequestException('Tài khoản không tồn tại');
+      }
+      if (user.isActive === false) {
+        throw new BadRequestException('Tài khoản chưa được kích hoạt');
+      }
+      const codeId = uuidv4();
+      if (!codeId) {
+        throw new BadRequestException('Tạo code kích hoạt lại thất bại');
+      }
+      await this.userModel.updateOne(
+        { _id: user._id },
+        { codeId: codeId, codeExpired: dayjs().add(3, 'minutes') },
+      );
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Change your password',
+        template: './register',
+        context: {
+          name: user?.name ?? user.email,
+          activationCode: codeId,
+        },
+      });
+      return { _id: user._id, email: email };
+    } catch {
+      throw new BadRequestException('Tài khoản không tồn tại/hợp lệ');
+    }
+  }
+  async changePassword(changePasswordDto: ChangePasswordDto) {
+    const { email, code, password, confirmPassword } = changePasswordDto;
+    try {
+      if (password !== confirmPassword) {
+        throw new BadRequestException(
+          'Password và Re-Password không chính xác',
+        );
+      }
+      const user = await this.userModel.findOne({ email });
+      if (!user) {
+        throw new BadRequestException('Tài khoản không tồn tại');
+      }
+      //check code's expired
+      const isBeforeCheck = dayjs().isBefore(user.codeExpired);
+      if (isBeforeCheck) {
+        const newPassword = await hashPassword(user.password);
+        await user.updateOne({ password: newPassword });
+        return { isBeforeCheck };
+      } else {
+        throw new BadRequestException({
+          message: 'Mã code không hợp lệ hoặc đã hết hạn ',
+        });
+      }
+    } catch {
+      throw new BadRequestException('Internal server error');
+    }
+  }
 }
 import { create } from 'node:domain';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 import { filter } from 'rxjs';
 import e, { response } from 'express';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
-import { CodeAuthDto, RetryCodeDto } from '@/auth/dto/checkcode-auth.dto';
+import {
+  ChangePasswordDto,
+  CodeAuthDto,
+  RetryCodeDto,
+  RetryPasswordDto,
+} from '@/auth/dto/checkcode-auth.dto';

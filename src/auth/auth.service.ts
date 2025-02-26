@@ -4,7 +4,12 @@ import { comparePassword } from '@/helpers/utils';
 import { JwtService } from '@nestjs/jwt';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { register } from 'node:module';
-import { CodeAuthDto, RetryCodeDto } from './dto/checkcode-auth.dto';
+import {
+  ChangePasswordDto,
+  CodeAuthDto,
+  RetryCodeDto,
+  RetryPasswordDto,
+} from './dto/checkcode-auth.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -43,5 +48,11 @@ export class AuthService {
   };
   retryActive = async (retryCodeDto: RetryCodeDto) => {
     return await this.usersService.retryActive(retryCodeDto);
+  };
+  retryPassword = async (retryPasswordDto: RetryPasswordDto) => {
+    return await this.usersService.retryPassword(retryPasswordDto);
+  };
+  changePassword = async (changePasswordDto: ChangePasswordDto) => {
+    return await this.usersService.changePassword(changePasswordDto);
   };
 }
