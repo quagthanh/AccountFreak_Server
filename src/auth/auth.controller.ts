@@ -13,7 +13,7 @@ import { JwtAuthGuard } from './passport/jwt-auth.guard';
 import { Public, ResponseMessage } from '@/decorator/customize';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { MailerService } from '@nestjs-modules/mailer';
-import { CodeAuthDto } from './dto/checkcode-auth.dto';
+import { CodeAuthDto, RetryCodeDto } from './dto/checkcode-auth.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -37,6 +37,11 @@ export class AuthController {
   @Post('check-code')
   checkCode(@Body() codeDto: CodeAuthDto) {
     return this.authService.checkCode(codeDto);
+  }
+  @Public()
+  @Post('retry-active')
+  retryActive(@Body() retryCodeDto: RetryCodeDto) {
+    return this.authService.retryActive(retryCodeDto);
   }
   @Public()
   @Get('mail')

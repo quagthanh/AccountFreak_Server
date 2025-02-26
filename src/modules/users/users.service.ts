@@ -129,10 +129,42 @@ export class UsersService {
     }
     return { isBeforeCheck };
   }
+  async retryActive(retryCodeDto: RetryCodeDto) {
+    const { email } = retryCodeDto;
+    try {
+      const user = await this.userModel.findOne({ email });
+      if (!user) {
+        throw new BadRequestException('Tài khoản không tồn tại');
+      }
+      if (user.isActive) {
+        throw new BadRequestException('Tài khoản đã được kích hoạt');
+      }
+      const codeId = uuidv4();
+      if (!codeId) {
+        throw new BadRequestException('Tạo code kích hoạt lại thất bại');
+      }
+      await this.userModel.updateOne(
+        { _id: user._id },
+        { codeId: codeId, codeExpired: dayjs().add(3, 'minutes') },
+      );
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Reactive your account',
+        template: './register',
+        context: {
+          name: user?.name ?? user.email,
+          activationCode: codeId,
+        },
+      });
+      return { _id: user._id };
+    } catch {
+      throw new BadRequestException('Tài khoản không tồn tại/hợp lệ');
+    }
+  }
 }
 import { create } from 'node:domain';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 import { filter } from 'rxjs';
-import { response } from 'express';
+import e, { response } from 'express';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
-import { CodeAuthDto } from '@/auth/dto/checkcode-auth.dto';
+import { CodeAuthDto, RetryCodeDto } from '@/auth/dto/checkcode-auth.dto';
