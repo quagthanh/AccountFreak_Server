@@ -18,8 +18,8 @@ export class UsersService {
   ) {}
   isEmailExist = async (email: string) => {
     const user = await this.userModel.exists({ email });
-    if (user) return true;
-    return false;
+
+    return !!user;
   };
   async create(createUserDto: CreateUserDto) {
     //hash password
@@ -59,7 +59,15 @@ export class UsersService {
       .limit(pageSize)
       .select('-password')
       .sort(sort as any);
-    return { result, totalPages };
+    return {
+      meta: {
+        current: current,
+        pageSize: pageSize,
+        pages: totalPages,
+        total: totalItems,
+      },
+      result,
+    };
   }
 
   async findOne(_id: string) {
