@@ -40,7 +40,7 @@ export class UsersController {
   update(@Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(updateUserDto);
   }
-
+  @Public()
   @Delete(':id')
   remove(@Param('id') _id: string) {
     return this.usersService.remove(_id);
