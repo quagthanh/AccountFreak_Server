@@ -158,7 +158,7 @@ export class UsersService {
       await this.mailerService.sendMail({
         to: user.email,
         subject: 'Reactive your account',
-        template: './register',
+        template: './reactive',
         context: {
           name: user?.name ?? user.email,
           activationCode: codeId,
@@ -229,10 +229,6 @@ export class UsersService {
     }
   }
 }
-import { create } from 'node:domain';
-import { RestaurantsModule } from '../restaurants/restaurants.module';
-import { filter } from 'rxjs';
-import e, { response } from 'express';
 import { CreateAuthDto } from '@/auth/dto/create-auth.dto';
 import {
   ChangePasswordDto,
